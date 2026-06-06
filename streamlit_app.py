@@ -1,3 +1,4 @@
+# streamlit_app.py
 import os
 import streamlit as st
 import pandas as pd
@@ -7,15 +8,26 @@ from model import train_and_save_model
 # Set up page configurations
 st.set_page_config(page_title="Housing Price Predictor", page_icon="🏠", layout="centered")
 
-# Ensure the model exists before trying to load it
 MODEL_PATH = "housing_model.pkl"
-if not os.path.exists(MODEL_PATH):
-    with st.spinner("Model file missing. Running training pipeline to build the model..."):
+
+# FIX: Check if the file doesn't exist OR if it is empty (0 bytes) due to a failed/interrupted write
+if not os.path.exists(MODEL_PATH) or os.path.getsize(MODEL_PATH) == 0:
+    with st.spinner("Model file missing or incomplete. Training pipeline running..."):
+        # If an empty file exists, remove it first to avoid corrupt states
+        if os.path.exists(MODEL_PATH):
+            os.remove(MODEL_PATH)
         train_and_save_model()
 
-# Load the trained model and features metadata
-with open(MODEL_PATH, 'rb') as f:
-    artifacts = pickle.load(f)
+# Safely load the trained model and features metadata
+try:
+    with open(MODEL_PATH, 'rb') as f:
+        artifacts = pickle.load(f)
+except EOFError:
+    # Fallback safety: If it still hits an EOFError, delete the corrupt file and force re-train
+    os.remove(MODEL_PATH)
+    train_and_save_model()
+    with open(MODEL_PATH, 'rb') as f:
+        artifacts = pickle.load(f)
 
 model = artifacts['model']
 model_features = artifacts['features']
@@ -64,7 +76,6 @@ if st.button("💰 Predict Housing Price", use_container_width=True):
     }
     
     # Map furnishing status back to One-Hot columns
-    # 'furnishingstatus_semi-furnished' and 'furnishingstatus_unfurnished'
     input_dict['furnishingstatus_semi-furnished'] = 1 if furnishing == "Semi-Furnished" else 0
     input_dict['furnishingstatus_unfurnished'] = 1 if furnishing == "Unfurnished" else 0
     
