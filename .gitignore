@@ -1,0 +1,12 @@
+# Local Kagglehub cache / dataset files
+.kagglehub/
+datasets/
+*.csv
+
+# Python environments and caches
+__pycache__/
+*.pyc
+.venv/
+env/
+
+# Model checkpoints
