@@ -33,7 +33,7 @@ model = artifacts['model']
 model_features = artifacts['features']
 
 # --- UI Setup ---
-st.title("🏠 Housing Price Prediction AI")
+st.title("🏠 Housing Price Prediction")
 st.write("Adjust the parameters below to estimate the market value of a house.")
 st.markdown("---")
 
